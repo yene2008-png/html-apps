@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日读经</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#8a5a2b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="每日读经" />
+  <link rel="icon" type="image/svg+xml" href="icons/zh.svg" />
+  <link rel="apple-touch-icon" href="icons/zh-180.png" />
+  <link rel="manifest" href="manifest-zh.json" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js"); });
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>每日读经</h1>
+      <div id="today" class="today"></div>
+      <div id="userBar" class="userbar" style="display:none">
+        <span>背经者：<b id="userName"></b></span>
+        <button id="btnSwitchTopic" class="link">切换主题</button>
+        <button id="btnSwitchUser" class="link">换用户</button>
+      </div>
+    </header>
+
+    <!-- 登录 -->
+    <section id="loginCard" class="card" style="display:none">
+      <h2>欢迎</h2>
+      <p class="muted">输入你的名字开始。应用会记住从今天起你的背经进度。</p>
+      <div class="row">
+        <input id="nameInput" type="text" placeholder="请输入用户名" maxlength="20" />
+        <button id="btnStart" class="primary">开始</button>
+      </div>
+    </section>
+
+    <!-- 选主题 -->
+    <section id="topicCard" class="card" style="display:none">
+      <h2>选择背诵主题</h2>
+      <p class="muted">从下面任选一个主题，之后每天为你显示其中一节经文。</p>
+      <div class="row">
+        <select id="topicSelect"></select>
+        <button id="btnChooseTopic" class="primary">就背这个</button>
+      </div>
+    </section>
+
+    <!-- 背经 + 填空 -->
+    <section id="studyCard" class="card" style="display:none">
+      <div class="study-head">
+        <span id="topicLabel" class="chip"></span>
+        <span id="progressLabel" class="muted"></span>
+      </div>
+
+      <div class="verse">
+        <div id="verseRef" class="verse-ref"></div>
+        <p id="verseMain" class="verse-zh"></p>
+        <p id="verseSub" class="verse-en"></p>
+        <p id="verseNote" class="verse-note" style="display:none"></p>
+      </div>
+
+      <div class="cloze">
+        <div class="cloze-head">
+          <h3>填空练习</h3>
+          <label class="difficulty">难度
+            <select id="difficultySelect">
+              <option value="easy">简单</option>
+              <option value="medium">中等</option>
+              <option value="hard">困难</option>
+            </select>
+          </label>
+        </div>
+        <p class="cloze-text">
+          <span id="clozeBefore"></span><span id="clozeBlank" class="blank"></span><span id="clozeAfter"></span>
+        </p>
+        <div class="row">
+          <input id="clozeInput" type="text" placeholder="在此填入空格处的内容" />
+          <button id="btnCheck" class="primary">检查</button>
+        </div>
+        <div class="row btns">
+          <button id="btnHint" class="ghost">提示</button>
+          <button id="btnReveal" class="ghost">显示答案</button>
+        </div>
+        <div id="clozeFeedback" class="feedback"></div>
+      </div>
+
+      <div id="doneBanner" class="done" style="display:none">
+        🎉 你已背到本主题的最后一节。可点上方「切换主题」继续。
+      </div>
+
+      <div class="stats">
+        <h3>打卡统计</h3>
+        <div class="stat-grid">
+          <div class="stat"><b id="statStreak">0</b><span>连续打卡（天）</span></div>
+          <div class="stat"><b id="statLongest">0</b><span>最长连续（天）</span></div>
+          <div class="stat"><b id="statTotal">0</b><span>累计打卡（天）</span></div>
+          <div class="stat"><b id="statCorrect">0</b><span>累计答对（节）</span></div>
+        </div>
+        <div id="todayStatus" class="today-status"></div>
+        <div class="cal-wrap">
+          <div class="cal-title muted">最近 14 天</div>
+          <div id="calendar" class="calendar"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot muted">
+      经文取自《1000处极重要的经节》。数据离线保存在本机浏览器中。
+    </footer>
+  </div>
+
+  <!-- 数据与逻辑（用 <script> 加载，避免 file:// 下 fetch 的限制） -->
+  <script src="data/verses.js"></script>
+  <script src="js/cloze.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

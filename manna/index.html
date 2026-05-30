@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>选择版本 · 千千节</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#8a5a2b" />
+  <link rel="icon" type="image/svg+xml" href="icons/bi.svg" />
+  <link rel="apple-touch-icon" href="icons/bi-180.png" />
+  <style>
+    .lander { max-width: 560px; margin: 0 auto; padding: 2rem 1rem; }
+    .lander h1 { text-align:center; color:var(--accent); letter-spacing:.1em; }
+    .lander .muted { text-align:center; margin-bottom:1.4rem; }
+    .app-card { display:flex; align-items:center; gap:1rem; text-decoration:none;
+      background:var(--card); border:1px solid var(--line); border-radius:14px;
+      padding:1rem 1.1rem; margin-bottom:1rem; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+    .app-card:hover { border-color:var(--accent); }
+    .app-card img { width:60px; height:60px; border-radius:14px; }
+    .app-name { font-size:1.2rem; color:var(--ink); font-weight:600; }
+    .app-desc { color:var(--muted); font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <div class="lander">
+    <h1>千千节</h1>
+    <p class="muted">每日一节经文 · 背诵与填空 — 请选择一个版本</p>
+      <a class="app-card" href="dujing.html">
+        <img src="icons/zh-192.png" alt="" />
+        <div><div class="app-name">每日读经</div><div class="app-desc">中文 · 每日一节，背诵 + 填空</div></div>
+      </a>
+      <a class="app-card" href="dailymanna.html">
+        <img src="icons/en-192.png" alt="" />
+        <div><div class="app-name">Daily Manna</div><div class="app-desc">English · a verse a day, recite + fill in</div></div>
+      </a>
+      <a class="app-card" href="qianqianjie.html">
+        <img src="icons/bi-192.png" alt="" />
+        <div><div class="app-name">千千节</div><div class="app-desc">中 / English 一键切换</div></div>
+      </a>
+    <p class="muted" style="margin-top:1.5rem;font-size:.82rem">在手机浏览器打开后，可“添加到主屏幕”当作 App 使用。</p>
+  </div>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js"); });
+    }
+  </script>
+</body>
+</html>

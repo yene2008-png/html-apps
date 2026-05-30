@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Manna</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#8a5a2b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Daily Manna" />
+  <link rel="icon" type="image/svg+xml" href="icons/en.svg" />
+  <link rel="apple-touch-icon" href="icons/en-180.png" />
+  <link rel="manifest" href="manifest-en.json" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js"); });
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Daily Manna</h1>
+      <div id="today" class="today"></div>
+      <div id="userBar" class="userbar" style="display:none">
+        <span>Reader: <b id="userName"></b></span>
+        <button id="btnSwitchTopic" class="link">Switch topic</button>
+        <button id="btnSwitchUser" class="link">Switch user</button>
+      </div>
+    </header>
+
+    <!-- Login -->
+    <section id="loginCard" class="card" style="display:none">
+      <h2>Welcome</h2>
+      <p class="muted">Enter your name to begin. The app remembers your progress from today on.</p>
+      <div class="row">
+        <input id="nameInput" type="text" placeholder="Enter your name" maxlength="30" />
+        <button id="btnStart" class="primary">Start</button>
+      </div>
+    </section>
+
+    <!-- Choose topic -->
+    <section id="topicCard" class="card" style="display:none">
+      <h2>Choose a topic</h2>
+      <p class="muted">Pick a topic below; each day one of its verses will be shown.</p>
+      <div class="row">
+        <select id="topicSelect"></select>
+        <button id="btnChooseTopic" class="primary">Start this topic</button>
+      </div>
+    </section>
+
+    <!-- Study + cloze -->
+    <section id="studyCard" class="card" style="display:none">
+      <div class="study-head">
+        <span id="topicLabel" class="chip"></span>
+        <span id="progressLabel" class="muted"></span>
+      </div>
+
+      <div class="verse">
+        <div id="verseRef" class="verse-ref"></div>
+        <p id="verseMain" class="verse-main-en"></p>
+      </div>
+
+      <div class="cloze">
+        <div class="cloze-head">
+          <h3>Fill in the blank</h3>
+          <label class="difficulty">Difficulty
+            <select id="difficultySelect">
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+        <p class="cloze-text">
+          <span id="clozeBefore"></span><span id="clozeBlank" class="blank"></span><span id="clozeAfter"></span>
+        </p>
+        <div class="row">
+          <input id="clozeInput" type="text" placeholder="Type the missing word(s)" />
+          <button id="btnCheck" class="primary">Check</button>
+        </div>
+        <div class="row btns">
+          <button id="btnHint" class="ghost">Hint</button>
+          <button id="btnReveal" class="ghost">Show answer</button>
+        </div>
+        <div id="clozeFeedback" class="feedback"></div>
+      </div>
+
+      <div id="doneBanner" class="done" style="display:none">
+        🎉 You've reached the last verse of this topic. Tap “Switch topic” above to continue.
+      </div>
+
+      <div class="stats">
+        <h3>Check-in stats</h3>
+        <div class="stat-grid">
+          <div class="stat"><b id="statStreak">0</b><span>Current streak (days)</span></div>
+          <div class="stat"><b id="statLongest">0</b><span>Longest streak (days)</span></div>
+          <div class="stat"><b id="statTotal">0</b><span>Days checked in</span></div>
+          <div class="stat"><b id="statCorrect">0</b><span>Verses correct</span></div>
+        </div>
+        <div id="todayStatus" class="today-status"></div>
+        <div class="cal-wrap">
+          <div class="cal-title muted">Last 14 days</div>
+          <div id="calendar" class="calendar"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot muted">
+      Verses from “1000 Vital Verses.” Data is stored offline in this browser.
+    </footer>
+  </div>
+
+  <script src="data/verses.js"></script>
+  <script src="js/cloze-en.js"></script>
+  <script>window.APP_LANG = "en";</script>
+  <script src="js/app.js"></script>
+</body>
+</html>
