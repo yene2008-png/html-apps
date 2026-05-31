@@ -111,6 +111,16 @@ button.link {
 .verse-note { color: var(--muted); font-size: .9rem; margin-top: .6rem; border-top: 1px dashed var(--line); padding-top: .5rem; }
 .verse-main-en { font-size: 1.35rem; line-height: 1.75; margin: .2rem 0; font-family: Georgia, "Times New Roman", serif; }
 
+/* 祷读经节阶段 */
+.pray { text-align: center; padding: 1.4rem .5rem .6rem; }
+.pray-title { font-size: 1.15rem; color: var(--accent); margin-bottom: .35rem; }
+.pray-sub { color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+.pray-count {
+  font-size: 2.8rem; color: var(--accent); margin: .4rem 0 1.1rem;
+  font-variant-numeric: tabular-nums; letter-spacing: .04em;
+}
+.pray-note { font-size: .82rem; margin-top: .9rem; }
+
 /* 填空 */
 .cloze { background: #faf7f1; border-radius: 10px; padding: 1rem 1.1rem; }
 .cloze-head { display: flex; justify-content: space-between; align-items: center; }

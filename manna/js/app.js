@@ -12,6 +12,10 @@
   var VERSES = window.VERSES || [];
   var CLOZE = LANG === "en" ? window.ClozeEn : window.Cloze;
 
+  var PRAY_SECONDS = 180;   // 经节“祷读”停留时长（秒），到时自动进入填空
+  // 两阶段流程状态：先看/祷读经节，再做填空
+  var lastVerseNum = null, curPhase = null, curIsLast = false, prayId = null, prayLeft = 0;
+
   // ---------- 文案 ----------
   var STRINGS = {
     zh: {
@@ -78,6 +82,12 @@
     statTotal: { zh: "累计打卡（天）", en: "Days checked in" },
     statCorrect: { zh: "累计答对（节）", en: "Verses correct" },
     last14: { zh: "最近 14 天", en: "Last 14 days" },
+    prayTitle: { zh: "请先祷读这节经文", en: "Pray-read this verse first" },
+    praySub: { zh: "把经文当作祷告，向主轻声读出来。",
+      en: "Turn the verse into prayer—read it softly to the Lord." },
+    prayBtn: { zh: "我祷读好了，开始填空", en: "I'm ready — start the blank" },
+    prayNote: { zh: "时间到会自动进入填空题",
+      en: "It will move on to the blank automatically when the time is up." },
     foot: { zh: "经文取自《1000处极重要的经节》。数据离线保存在本机浏览器中。",
       en: "Verses from “1000 Vital Verses.” Data is stored offline in this browser." }
   };
@@ -256,6 +266,38 @@
     show(el("userBar"), hasUser);
     if (hasUser) setText("userName", currentUser);
     if (hasTopic) { maybeAdvance(u); renderStudy(u); }
+    else { clearPray(); lastVerseNum = null; curPhase = null; }
+  }
+
+  // ---------- 两阶段：祷读经节 -> 填空 ----------
+  function clearPray() { if (prayId) { clearInterval(prayId); prayId = null; } }
+
+  function fmtTime(s) {
+    var m = Math.floor(s / 60), x = s % 60;
+    return m + ":" + (x < 10 ? "0" : "") + x;
+  }
+
+  function startPray() {
+    clearPray();
+    prayLeft = PRAY_SECONDS;
+    setText("prayCountdown", fmtTime(prayLeft));
+    prayId = setInterval(function () {
+      prayLeft -= 1;
+      if (prayLeft <= 0) { clearPray(); setPhase("cloze"); return; }
+      setText("prayCountdown", fmtTime(prayLeft));
+    }, 1000);
+  }
+
+  function setPhase(p) {
+    curPhase = p;
+    var inVerse = (p === "verse");
+    show(document.querySelector(".verse"), inVerse);
+    show(el("prayPrompt"), inVerse);
+    show(document.querySelector(".cloze"), !inVerse);
+    show(document.querySelector(".stats"), !inVerse);
+    show(el("doneBanner"), !inVerse && curIsLast);
+    if (!inVerse) { clearPray(); var i = el("clozeInput"); if (i) i.focus(); }
+    window.scrollTo(0, 0);
   }
 
   function renderTopicPicker() {
@@ -286,7 +328,17 @@
     markCheckin(u);
     el("difficultySelect").value = u.difficulty;
 
-    if (!v) { setText("verseRef", STR.topicDone); return; }
+    if (!v) {
+      clearPray();
+      show(el("prayPrompt"), false);
+      show(document.querySelector(".cloze"), false);
+      show(document.querySelector(".verse"), true);
+      show(el("verseSub"), false); show(el("verseNote"), false);
+      setText("verseMain", ""); setText("verseRef", STR.topicDone);
+      show(document.querySelector(".stats"), true);
+      renderStats(u);
+      return;
+    }
 
     setText("verseRef", STR.verseRef(v));
     var mainEl = el("verseMain");
@@ -299,7 +351,17 @@
 
     buildClozeUI(u, v);
     renderStats(u);
-    show(el("doneBanner"), idx >= list.length - 1 && t.lastAdvanceDate);
+    curIsLast = idx >= list.length - 1 && !!t.lastAdvanceDate;
+
+    if (v.number !== lastVerseNum || !curPhase) {
+      // 新的一节：先进入“祷读经节”阶段并开始 3 分钟倒计时
+      lastVerseNum = v.number;
+      setPhase("verse");
+      startPray();
+    } else {
+      // 同一节的重渲染（切换难度/语言）：保持当前阶段，不重启计时
+      setPhase(curPhase);
+    }
   }
 
   function renderStats(u) {
@@ -422,6 +484,9 @@
       saveStore(store);
       renderStudy(u);
     };
+
+    var bsc = el("btnStartCloze");
+    if (bsc) bsc.onclick = function () { clearPray(); setPhase("cloze"); };
   }
 
   function init() {
