@@ -419,7 +419,8 @@
         var w = c.answer.split(/\s+/);
         fb.textContent = STR.hint(w[0], w.length);
       } else {
-        fb.textContent = STR.hint(c.answer[0], c.answer.length);
+        var na = window.Cloze.normalize(c.answer);   // 去掉 []、标点后的内容字
+        fb.textContent = STR.hint(na[0] || c.answer[0], na.length || c.answer.length);
       }
       fb.className = "feedback hint";
     };
@@ -437,7 +438,8 @@
       for (var i = 0; i < n; i++) parts.push("_____");
       return parts.join(" ");
     }
-    return "□".repeat(Math.max(1, answer.length));
+    var n = window.Cloze && window.Cloze.normalize ? window.Cloze.normalize(answer).length : answer.length;
+    return "□".repeat(Math.max(1, n));
   }
 
   // ---------- 事件 ----------

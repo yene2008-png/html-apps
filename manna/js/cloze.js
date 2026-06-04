@@ -116,16 +116,10 @@
     return build(segs, start0, start0);
   }
 
-  // 比对：忽略空白与标点，判断作答是否正确
+  // 比对：只保留汉字/字母/数字，忽略空白、标点及 []【】〔〕 等特殊符号
+  // （恢复本经文里 [ ] 表示补足的字，作答时可不输入这些符号也算对）
   function normalizeAnswer(s) {
-    var out = "";
-    for (var i = 0; i < s.length; i++) {
-      var ch = s[i];
-      if (ch === " " || ch === "\t" || ch === "\n") continue;
-      if (isPunct(ch)) continue;
-      out += ch;
-    }
-    return out;
+    return (s || "").replace(/[^0-9A-Za-z〇㐀-鿿豈-﫿]/g, "");
   }
 
   function isCorrect(input, answer) {
