@@ -62,6 +62,7 @@
     reader: { zh: "背经者：", en: "Reader:" },
     switchTopic: { zh: "切换主题", en: "Switch topic" },
     switchUser: { zh: "换用户", en: "Switch user" },
+    reminderJump: { zh: "⏰ 提醒", en: "⏰ Reminder" },
     welcome: { zh: "欢迎", en: "Welcome" },
     welcomeDesc: { zh: "输入你的名字开始。应用会记住从今天起你的背经进度。",
       en: "Enter your name to begin. The app remembers your progress from today on." },
@@ -305,7 +306,7 @@
     show(el("prayPrompt"), inVerse);
     show(document.querySelector(".cloze"), !inVerse);
     show(document.querySelector(".stats"), !inVerse);
-    show(document.querySelector(".reminder"), !inVerse);
+    show(document.querySelector(".reminder"), true);  // 提醒设置两阶段都显示，方便找到
     show(el("doneBanner"), !inVerse && curIsLast);
     if (!inVerse) { clearPray(); var i = el("clozeInput"); if (i) i.focus(); }
     window.scrollTo(0, 0);
@@ -554,6 +555,13 @@
 
     var bar = el("btnAddReminder");
     if (bar) bar.onclick = addReminder;
+
+    var rj = el("btnReminderJump");
+    if (rj) rj.onclick = function () {
+      var r = document.querySelector(".reminder");
+      if (r) { r.style.display = ""; r.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      var rt = el("reminderTime"); if (rt) rt.focus();
+    };
   }
 
   function init() {

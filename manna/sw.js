@@ -1,4 +1,4 @@
-const CACHE = "manna-20260615211707";
+const CACHE = "manna-20260615212447";
 const ASSETS = ["./", "index.html", "dujing.html", "icons/zh-180.png", "icons/zh-192.png", "icons/zh-512.png", "icons/zh-512m.png", "icons/zh.svg", "manifest-zh.json", "dailymanna.html", "icons/en-180.png", "icons/en-192.png", "icons/en-512.png", "icons/en-512m.png", "icons/en.svg", "manifest-en.json", "qianqianjie.html", "icons/bi-180.png", "icons/bi-192.png", "icons/bi-512.png", "icons/bi-512m.png", "icons/bi.svg", "manifest-bi.json", "css/style.css", "js/cloze.js", "js/cloze-en.js", "js/app.js", "data/verses.js"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
