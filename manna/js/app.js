@@ -31,7 +31,10 @@
       todayPending: "今日待完成 — 答对今天的填空题即可打卡",
       calDone: "（已答对）", calChecked: "（已打开）",
       noData: "未能加载经文数据（data/verses.js）。请先运行 extract_verses.py。",
-      blankChar: "□"
+      blankChar: "□",
+      icsSummary: "该来背经文啦 · 每日读经",
+      icsDesc: "打开应用，先祷读今天的经节，再做填空。",
+      reminderSaved: function (t) { return "已生成每天 " + t + " 的提醒，请在弹出的窗口里点「添加」。"; }
     },
     en: {
       progress: function (i, n) { return "Verse " + i + " of " + n; },
@@ -46,7 +49,10 @@
       todayPending: "Not done yet — answer today's blank to check in.",
       calDone: " (correct)", calChecked: " (opened)",
       noData: "Could not load verse data (data/verses.js). Run extract_verses.py first.",
-      blankChar: "_"
+      blankChar: "_",
+      icsSummary: "Time to memorize · Daily Manna",
+      icsDesc: "Open the app, pray-read today's verse, then do the blank.",
+      reminderSaved: function (t) { return "Created a daily reminder at " + t + " — tap “Add” in the dialog that appears."; }
     }
   };
   var STR = STRINGS[LANG];
@@ -88,6 +94,10 @@
     prayBtn: { zh: "我祷读好了，开始填空", en: "I'm ready — start the blank" },
     prayNote: { zh: "时间到会自动进入填空题",
       en: "It will move on to the blank automatically when the time is up." },
+    reminderTitle: { zh: "每日提醒", en: "Daily reminder" },
+    reminderDesc: { zh: "选一个时间，加到手机日历，每天到点提醒你来背经。",
+      en: "Pick a time and add it to your phone's calendar for a daily nudge." },
+    reminderAdd: { zh: "添加到日历", en: "Add to calendar" },
     foot: { zh: "经文取自《1000处极重要的经节》。数据离线保存在本机浏览器中。",
       en: "Verses from “1000 Vital Verses.” Data is stored offline in this browser." }
   };
@@ -295,9 +305,59 @@
     show(el("prayPrompt"), inVerse);
     show(document.querySelector(".cloze"), !inVerse);
     show(document.querySelector(".stats"), !inVerse);
+    show(document.querySelector(".reminder"), !inVerse);
     show(el("doneBanner"), !inVerse && curIsLast);
     if (!inVerse) { clearPray(); var i = el("clozeInput"); if (i) i.focus(); }
     window.scrollTo(0, 0);
+  }
+
+  // ---------- 每日提醒（生成日历事件 .ics，由手机系统在设定时间通知）----------
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function icsEsc(s) {
+    return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  }
+  function fmtDT(d) {
+    return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) +
+      "T" + pad2(d.getHours()) + pad2(d.getMinutes()) + "00";
+  }
+  function buildICS(timeStr, seq) {
+    var hm = (timeStr || "07:00").split(":");
+    var now = new Date();
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +hm[0], +hm[1], 0);
+    if (start <= now) start.setDate(start.getDate() + 1); // 今天已过则从明天开始
+    var url = location.href.split("#")[0];
+    var summary = icsEsc(STR.icsSummary);
+    var lines = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//qianqianjie//reminder//CN", "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      "UID:" + STORE_KEY + "-daily-reminder@qianqianjie",
+      "SEQUENCE:" + seq,
+      "DTSTAMP:" + fmtDT(now),
+      "DTSTART:" + fmtDT(start),
+      "RRULE:FREQ=DAILY",
+      "SUMMARY:" + summary,
+      "DESCRIPTION:" + icsEsc(STR.icsDesc + "\n" + url),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + summary, "TRIGGER:PT0S", "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR"
+    ];
+    return lines.join("\r\n");
+  }
+  function downloadICS(ics) {
+    var blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "reminder.ics";
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+  }
+  function addReminder() {
+    var t = (el("reminderTime") && el("reminderTime").value) || "07:00";
+    localStorage.setItem(STORE_KEY + "_reminder", t);
+    var seq = (parseInt(localStorage.getItem(STORE_KEY + "_reminderSeq") || "0", 10) || 0) + 1;
+    localStorage.setItem(STORE_KEY + "_reminderSeq", seq);
+    downloadICS(buildICS(t, seq));
+    var m = el("reminderMsg");
+    if (m) { m.textContent = STR.reminderSaved(t); m.style.display = ""; }
   }
 
   function renderTopicPicker() {
@@ -327,6 +387,8 @@
     setText("progressLabel", STR.progress(idx + 1, list.length));
     markCheckin(u);
     el("difficultySelect").value = u.difficulty;
+    var rt = el("reminderTime");
+    if (rt && !rt.value) rt.value = localStorage.getItem(STORE_KEY + "_reminder") || "07:00";
 
     if (!v) {
       clearPray();
@@ -489,6 +551,9 @@
 
     var bsc = el("btnStartCloze");
     if (bsc) bsc.onclick = function () { clearPray(); setPhase("cloze"); };
+
+    var bar = el("btnAddReminder");
+    if (bar) bar.onclick = addReminder;
   }
 
   function init() {

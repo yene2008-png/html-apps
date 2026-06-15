@@ -65,7 +65,7 @@ html, body {
 .row { display: flex; gap: .6rem; margin-top: .8rem; flex-wrap: wrap; }
 .row.btns { margin-top: .5rem; }
 
-input[type="text"], select {
+input[type="text"], input[type="time"], select {
   flex: 1 1 200px;
   padding: .6rem .8rem;
   border: 1px solid var(--line);
@@ -182,6 +182,12 @@ button.link {
   .stat b { font-size: 1.25rem; }
   .cal-cell { width: 1.7rem; height: 1.7rem; font-size: .7rem; }
 }
+
+/* 每日提醒 */
+.reminder { margin-top: 1.4rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+.reminder h3 { margin: 0 0 .5rem; font-size: 1.05rem; color: var(--accent); }
+.reminder input[type="time"] { flex: 1 1 120px; max-width: 160px; }
+.reminder-msg { margin-top: .7rem; color: var(--ok); font-size: .9rem; }
 
 .foot { text-align: center; font-size: .82rem; margin-top: 1rem; }
 
