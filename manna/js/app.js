@@ -32,7 +32,7 @@
       calDone: "（已答对）", calChecked: "（已打开）",
       noData: "未能加载经文数据（data/verses.js）。请先运行 extract_verses.py。",
       blankChar: "□",
-      icsSummary: "该来背经文啦 · 每日读经",
+      icsSummary: "晨兴时间到了，来亲近主耶稣哦！",
       icsDesc: "打开应用，先祷读今天的经节，再做填空。",
       reminderSaved: function (t) { return "已生成每天 " + t + " 的提醒，请在弹出的窗口里点「添加」。"; }
     },
@@ -50,7 +50,7 @@
       calDone: " (correct)", calChecked: " (opened)",
       noData: "Could not load verse data (data/verses.js). Run extract_verses.py first.",
       blankChar: "_",
-      icsSummary: "Time to memorize · Daily Manna",
+      icsSummary: "Morning revival time—come to the Lord Jesus!",
       icsDesc: "Open the app, pray-read today's verse, then do the blank.",
       reminderSaved: function (t) { return "Created a daily reminder at " + t + " — tap “Add” in the dialog that appears."; }
     }
