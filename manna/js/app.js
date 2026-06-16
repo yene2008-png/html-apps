@@ -34,7 +34,8 @@
       blankChar: "□",
       icsSummary: "晨兴时间到了，来亲近主耶稣哦！",
       icsDesc: "打开应用，先祷读今天的经节，再做填空。",
-      reminderSaved: function (t) { return "已生成每天 " + t + " 的提醒，请在弹出的窗口里点「添加」。"; }
+      reminderSaved: function (t) { return "已生成每天 " + t + " 的提醒文件，请在打开的日历里点「添加」（适合苹果/系统日历）。"; },
+      reminderGoogleMsg: function (t) { return "正在打开 Google 日历，请在里面点「保存」，之后每天 " + t + " 提醒你。"; }
     },
     en: {
       progress: function (i, n) { return "Verse " + i + " of " + n; },
@@ -52,7 +53,8 @@
       blankChar: "_",
       icsSummary: "Morning revival time—come to the Lord Jesus!",
       icsDesc: "Open the app, pray-read today's verse, then do the blank.",
-      reminderSaved: function (t) { return "Created a daily reminder at " + t + " — tap “Add” in the dialog that appears."; }
+      reminderSaved: function (t) { return "Created a daily reminder file for " + t + " — tap “Add” in your calendar (good for Apple/system Calendar)."; },
+      reminderGoogleMsg: function (t) { return "Opening Google Calendar — tap “Save” there to be reminded daily at " + t + "."; }
     }
   };
   var STR = STRINGS[LANG];
@@ -98,7 +100,8 @@
     reminderTitle: { zh: "每日提醒", en: "Daily reminder" },
     reminderDesc: { zh: "选一个时间，加到手机日历，每天到点提醒你来背经。",
       en: "Pick a time and add it to your phone's calendar for a daily nudge." },
-    reminderAdd: { zh: "添加到日历", en: "Add to calendar" },
+    reminderGoogle: { zh: "添加到 Google 日历", en: "Add to Google Calendar" },
+    reminderIcs: { zh: "下载日历文件（苹果等）", en: "Download .ics (Apple, etc.)" },
     foot: { zh: "经文取自《1000处极重要的经节》。数据离线保存在本机浏览器中。",
       en: "Verses from “1000 Vital Verses.” Data is stored offline in this browser." }
   };
@@ -321,27 +324,47 @@
     return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) +
       "T" + pad2(d.getHours()) + pad2(d.getMinutes()) + "00";
   }
-  function buildICS(timeStr, seq) {
+  // 提醒起始时刻：今天的 HH:MM，若已过则顺延到明天
+  function reminderStart(timeStr) {
     var hm = (timeStr || "07:00").split(":");
     var now = new Date();
-    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +hm[0], +hm[1], 0);
-    if (start <= now) start.setDate(start.getDate() + 1); // 今天已过则从明天开始
+    var s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +(hm[0] || 7), +(hm[1] || 0), 0);
+    if (s <= now) s.setDate(s.getDate() + 1);
+    return s;
+  }
+  // RFC5545 行折叠（按 UTF-8 字节，超 75 octet 续行以空格起头）
+  function charBytes(c) { var n = c.charCodeAt(0); return n < 0x80 ? 1 : n < 0x800 ? 2 : 3; }
+  function foldLine(line) {
+    var out = "", bytes = 0;
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i], cb = charBytes(c);
+      if (bytes + cb > 73) { out += "\r\n "; bytes = 1; }
+      out += c; bytes += cb;
+    }
+    return out;
+  }
+  function buildICS(timeStr, seq) {
+    var now = new Date();
+    var start = reminderStart(timeStr);
+    var end = new Date(start.getTime() + 15 * 60000);
     var url = location.href.split("#")[0];
     var summary = icsEsc(STR.icsSummary);
     var lines = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//qianqianjie//reminder//CN", "CALSCALE:GREGORIAN",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//qianqianjie//reminder//CN",
+      "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
       "BEGIN:VEVENT",
       "UID:" + STORE_KEY + "-daily-reminder@qianqianjie",
       "SEQUENCE:" + seq,
       "DTSTAMP:" + fmtDT(now),
       "DTSTART:" + fmtDT(start),
+      "DTEND:" + fmtDT(end),
       "RRULE:FREQ=DAILY",
       "SUMMARY:" + summary,
       "DESCRIPTION:" + icsEsc(STR.icsDesc + "\n" + url),
-      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + summary, "TRIGGER:PT0S", "END:VALARM",
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + summary, "TRIGGER:-PT0M", "END:VALARM",
       "END:VEVENT", "END:VCALENDAR"
     ];
-    return lines.join("\r\n");
+    return lines.map(foldLine).join("\r\n");
   }
   function downloadICS(ics) {
     var blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
@@ -351,14 +374,38 @@
     document.body.appendChild(a); a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
   }
-  function addReminder() {
+  function saveReminderTime() {
     var t = (el("reminderTime") && el("reminderTime").value) || "07:00";
     localStorage.setItem(STORE_KEY + "_reminder", t);
+    return t;
+  }
+  function reminderMsg(text) {
+    var m = el("reminderMsg");
+    if (m) { m.textContent = text; m.style.display = ""; }
+  }
+  // 安卓优先：打开 Google 日历预填事件，用户点保存即可
+  function googleCalUrl(timeStr) {
+    var s = reminderStart(timeStr), e = new Date(s.getTime() + 15 * 60000);
+    var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (x) {}
+    var p = "action=TEMPLATE&text=" + encodeURIComponent(STR.icsSummary) +
+      "&dates=" + fmtDT(s) + "/" + fmtDT(e) +
+      "&recur=" + encodeURIComponent("RRULE:FREQ=DAILY") +
+      "&details=" + encodeURIComponent(STR.icsDesc + "\n" + location.href.split("#")[0]) +
+      (tz ? "&ctz=" + encodeURIComponent(tz) : "");
+    return "https://calendar.google.com/calendar/render?" + p;
+  }
+  function addToGoogle() {
+    var t = saveReminderTime();
+    window.open(googleCalUrl(t), "_blank");
+    reminderMsg(STR.reminderGoogleMsg(t));
+  }
+  // 苹果日历等：下载 .ics
+  function addReminder() {
+    var t = saveReminderTime();
     var seq = (parseInt(localStorage.getItem(STORE_KEY + "_reminderSeq") || "0", 10) || 0) + 1;
     localStorage.setItem(STORE_KEY + "_reminderSeq", seq);
     downloadICS(buildICS(t, seq));
-    var m = el("reminderMsg");
-    if (m) { m.textContent = STR.reminderSaved(t); m.style.display = ""; }
+    reminderMsg(STR.reminderSaved(t));
   }
 
   function renderTopicPicker() {
@@ -553,6 +600,8 @@
     var bsc = el("btnStartCloze");
     if (bsc) bsc.onclick = function () { clearPray(); setPhase("cloze"); };
 
+    var bg = el("btnGoogleCal");
+    if (bg) bg.onclick = addToGoogle;
     var bar = el("btnAddReminder");
     if (bar) bar.onclick = addReminder;
 
